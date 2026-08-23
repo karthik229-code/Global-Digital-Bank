@@ -7,26 +7,39 @@ public class Account {
     private double balance;
     private String accountType;
     private String status;
+    private Integer pin;
+    private final int minSaving = 500;
+    private final int minCurrent = 1000;
 
     public Account(int accountNumber,String name,int age,double initialBalance,String accountType) {
-
         this.accountNumber = accountNumber;
         this.name = name;
-        this.age = age;
-        this.balance = initialBalance;
-        this.accountType = (accountType.equals("Savings") || accountType.equals("Current") ? accountType : "Savings");
+        this.age = (age >= 18 ? age : 18);
+        this.accountType = (accountType.equals("Savings") || accountType.equals("Current")
+                ? accountType
+                : "Savings");
+        this.balance = (this.accountType.equals("Savings")
+                ? ((initialBalance < minSaving) ? minSaving : initialBalance)
+                : ((initialBalance < minCurrent) ? minCurrent : initialBalance));
         this.status = "Active";
     }
+
     public boolean deposit(double amount) {
-        if(amount <= 0) return false;
+        if(amount <= 0 || status.equals("Inactive")) return false;
         balance += amount;
         return true;
     }
 
-    public boolean withdraw(double amount) {
-        if(amount > balance || amount <= 0) return false;
-        balance -= amount;
-        return true;
+    public boolean withdraw(double amount,int pin) {
+        if(amount > balance || amount <= 0 || status.equals("Inactive")) return false;
+        if(hasPin() && verifyPin(pin)) {
+            if((accountType.equals("Savings") && (balance-amount) >= minSaving) ||
+                    accountType.equals("Current") && (balance-amount) >= minCurrent) {
+                balance -= amount;
+                return true;
+            }
+        }
+        return false;
     }
 
     public int getAccountNumber() {
@@ -59,5 +72,32 @@ public class Account {
 
     public void setAge(int age) {
         this.age = age;
+    }
+
+    public boolean closeAccount() {
+        if(status.equals("Inactive")) return false;
+        status = "Inactive";
+        return true;
+    }
+
+    public boolean reopenAccount() {
+        if(status.equals("Active")) return false;
+        status = "Active";
+        return true;
+    }
+
+    public boolean setPin(int pin) {
+        if(pin > 9999 || pin < 1000) return false;
+        this.pin = pin;
+        return true;
+    }
+
+    public boolean verifyPin(int pin) {
+        if(!hasPin()) return false;
+        return pin == this.pin;
+    }
+
+    public boolean hasPin() {
+        return this.pin != null;
     }
 }
