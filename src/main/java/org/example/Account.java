@@ -1,6 +1,7 @@
 package org.example;
 
 public class Account {
+
     private int accountNumber;
     private String name;
     private int age;
@@ -8,39 +9,74 @@ public class Account {
     private String accountType;
     private String status;
     private Integer pin;
-    private final int minSaving = 500;
-    private final int minCurrent = 1000;
 
-    public Account(int accountNumber,String name,int age,double initialBalance,String accountType) {
+    private static final int MIN_AGE = 18;
+
+    private static final double MIN_SAVING_BALANCE = 500;
+    private static final double MIN_CURRENT_BALANCE = 1000;
+
+    private static final int MIN_PIN = 1000;
+    private static final int MAX_PIN = 9999;
+
+    private static final String SAVINGS = "Savings";
+    private static final String CURRENT = "Current";
+
+    private static final String ACTIVE = "Active";
+    private static final String INACTIVE = "Inactive";
+
+
+    public Account(int accountNumber, String name, int age,
+                   double initialBalance, String accountType) {
+
         this.accountNumber = accountNumber;
         this.name = name;
-        this.age = (age >= 18 ? age : 18);
-        this.accountType = (accountType.equals("Savings") || accountType.equals("Current")
+        this.age = (age >= MIN_AGE ? age : MIN_AGE);
+
+        this.accountType = (SAVINGS.equals(accountType) || CURRENT.equals(accountType)
                 ? accountType
-                : "Savings");
-        this.balance = (this.accountType.equals("Savings")
-                ? ((initialBalance < minSaving) ? minSaving : initialBalance)
-                : ((initialBalance < minCurrent) ? minCurrent : initialBalance));
-        this.status = "Active";
+                : SAVINGS);
+
+        this.balance = (SAVINGS.equals(this.accountType)
+                ? ((initialBalance < MIN_SAVING_BALANCE)
+                   ? MIN_SAVING_BALANCE
+                   : initialBalance)
+                : ((initialBalance < MIN_CURRENT_BALANCE)
+                   ? MIN_CURRENT_BALANCE
+                   : initialBalance));
+
+        this.status = ACTIVE;
     }
 
+
     public boolean deposit(double amount) {
-        if(amount <= 0 || status.equals("Inactive")) return false;
+        if (amount <= 0 || status.equals(INACTIVE)) {
+            return false;
+        }
+
         balance += amount;
         return true;
     }
 
-    public boolean withdraw(double amount,int pin) {
-        if(amount > balance || amount <= 0 || status.equals("Inactive")) return false;
-        if(hasPin() && verifyPin(pin)) {
-            if((accountType.equals("Savings") && (balance-amount) >= minSaving) ||
-                    accountType.equals("Current") && (balance-amount) >= minCurrent) {
+
+    public boolean withdraw(double amount, Integer pin) {
+
+        if (amount > balance || amount <= 0 || status.equals(INACTIVE)) {
+            return false;
+        }
+
+        if (hasPin() && verifyPin(pin)) {
+
+            if ((SAVINGS.equals(accountType) && (balance - amount) >= MIN_SAVING_BALANCE)
+                    || (CURRENT.equals(accountType) && (balance - amount) >= MIN_CURRENT_BALANCE)) {
+
                 balance -= amount;
                 return true;
             }
         }
+
         return false;
     }
+
 
     public int getAccountNumber() {
         return accountNumber;
@@ -66,6 +102,7 @@ public class Account {
         return status;
     }
 
+
     public void setName(String name) {
         this.name = name;
     }
@@ -74,28 +111,45 @@ public class Account {
         this.age = age;
     }
 
+
     public boolean closeAccount() {
-        if(status.equals("Inactive")) return false;
-        status = "Inactive";
+        if (status.equals(INACTIVE)) {
+            return false;
+        }
+
+        status = INACTIVE;
         return true;
     }
+
 
     public boolean reopenAccount() {
-        if(status.equals("Active")) return false;
-        status = "Active";
+        if (status.equals(ACTIVE)) {
+            return false;
+        }
+
+        status = ACTIVE;
         return true;
     }
 
+
     public boolean setPin(int pin) {
-        if(pin > 9999 || pin < 1000) return false;
+        if (pin < MIN_PIN || pin > MAX_PIN) {
+            return false;
+        }
+
         this.pin = pin;
         return true;
     }
 
+
     public boolean verifyPin(int pin) {
-        if(!hasPin()) return false;
+        if (!hasPin()) {
+            return false;
+        }
+
         return pin == this.pin;
     }
+
 
     public boolean hasPin() {
         return this.pin != null;
