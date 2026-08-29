@@ -2,19 +2,11 @@ package org.example;
 
 public class Account {
 
-    private int accountNumber;
-    private String name;
-    private int age;
-    private double balance;
-    private String accountType;
-    private String status;
-    private Integer pin;
+    // ===== Constants =====
+    private static final double MIN_BALANCE_SAVINGS = 500.0;
+    private static final double MIN_BALANCE_CURRENT = 1000.0;
 
     private static final int MIN_AGE = 18;
-
-    private static final double MIN_SAVING_BALANCE = 500;
-    private static final double MIN_CURRENT_BALANCE = 1000;
-
     private static final int MIN_PIN = 1000;
     private static final int MAX_PIN = 9999;
 
@@ -25,58 +17,175 @@ public class Account {
     private static final String INACTIVE = "Inactive";
 
 
+    // ===== Fields =====
+    private int accountNumber;
+    private String name;
+    private int age;
+    private double balance;
+    private String accountType;
+    private String status;
+    private Integer pin;
+
+
+    // ===== Constructor =====
     public Account(int accountNumber, String name, int age,
-                   double initialBalance, String accountType) {
+                   double initialBalance, String accountType)
+            throws IllegalArgumentException {
+
+        if (age < MIN_AGE) {
+            throw new IllegalArgumentException("Age must be at least 18");
+        }
+
+        if (!SAVINGS.equals(accountType) && !CURRENT.equals(accountType)) {
+            throw new IllegalArgumentException("Invalid account type");
+        }
+
+        double minimumBalance = SAVINGS.equals(accountType)
+                ? MIN_BALANCE_SAVINGS
+                : MIN_BALANCE_CURRENT;
+
+        if (initialBalance < minimumBalance) {
+            throw new IllegalArgumentException(
+                    "Initial balance must be at least " + minimumBalance
+            );
+        }
 
         this.accountNumber = accountNumber;
         this.name = name;
-        this.age = (age >= MIN_AGE ? age : MIN_AGE);
-
-        this.accountType = (SAVINGS.equals(accountType) || CURRENT.equals(accountType)
-                ? accountType
-                : SAVINGS);
-
-        this.balance = (SAVINGS.equals(this.accountType)
-                ? ((initialBalance < MIN_SAVING_BALANCE)
-                   ? MIN_SAVING_BALANCE
-                   : initialBalance)
-                : ((initialBalance < MIN_CURRENT_BALANCE)
-                   ? MIN_CURRENT_BALANCE
-                   : initialBalance));
-
+        this.age = age;
+        this.balance = initialBalance;
+        this.accountType = accountType;
         this.status = ACTIVE;
+        this.pin = null;
     }
 
 
-    public boolean deposit(double amount) {
-        if (amount <= 0 || status.equals(INACTIVE)) {
-            return false;
+    // ===== Business Methods =====
+
+    public void deposit(double amount)
+            throws InvalidAmountException, InactiveAccountException {
+
+        validateActive();
+
+        if (amount <= 0) {
+            throw new InvalidAmountException(
+                    "Deposit amount must be greater than zero"
+            );
         }
 
         balance += amount;
-        return true;
     }
 
 
-    public boolean withdraw(double amount, Integer pin) {
+    public void withdraw(double amount, int pin)
+            throws InvalidAmountException,
+            InsufficientBalanceException,
+            MinimumBalanceViolationException,
+            InactiveAccountException,
+            InvalidPinException {
 
-        if (amount > balance || amount <= 0 || status.equals(INACTIVE)) {
-            return false;
+        validateActive();
+
+        if (!hasPin() || !verifyPin(pin)) {
+            throw new InvalidPinException("Invalid PIN");
         }
 
-        if (hasPin() && verifyPin(pin)) {
-
-            if ((SAVINGS.equals(accountType) && (balance - amount) >= MIN_SAVING_BALANCE)
-                    || (CURRENT.equals(accountType) && (balance - amount) >= MIN_CURRENT_BALANCE)) {
-
-                balance -= amount;
-                return true;
-            }
+        if (amount <= 0) {
+            throw new InvalidAmountException(
+                    "Withdrawal amount must be greater than zero"
+            );
         }
 
-        return false;
+        if (amount > balance) {
+            throw new InsufficientBalanceException(
+                    "Insufficient balance"
+            );
+        }
+
+        double remainingBalance = balance - amount;
+
+        if (remainingBalance < getMinimumBalance()) {
+            throw new MinimumBalanceViolationException(
+                    "Withdrawal would violate minimum balance requirement"
+            );
+        }
+
+        balance -= amount;
     }
 
+
+    // ===== Account Status Management =====
+
+    public void closeAccount() throws IllegalStateException {
+
+        if (status.equals(INACTIVE)) {
+            throw new IllegalStateException(
+                    "Account is already inactive"
+            );
+        }
+
+        status = INACTIVE;
+    }
+
+
+    public void reopenAccount() throws IllegalStateException {
+
+        if (status.equals(ACTIVE)) {
+            throw new IllegalStateException(
+                    "Account is already active"
+            );
+        }
+
+        status = ACTIVE;
+    }
+
+
+    // ===== PIN Management =====
+
+    public void setPin(int pin) throws IllegalArgumentException {
+
+        if (pin < MIN_PIN || pin > MAX_PIN) {
+            throw new IllegalArgumentException(
+                    "PIN must be a 4-digit number"
+            );
+        }
+
+        this.pin = pin;
+    }
+
+
+    public boolean verifyPin(int pin) {
+        return hasPin() && this.pin == pin;
+    }
+
+
+    public boolean hasPin() {
+        return this.pin != null;
+    }
+
+
+    // ===== Helper Methods =====
+
+    private double getMinimumBalance() {
+
+        return SAVINGS.equals(accountType)
+                ? MIN_BALANCE_SAVINGS
+                : MIN_BALANCE_CURRENT;
+    }
+
+
+    private void validateActive()
+            throws InactiveAccountException {
+
+        if (status.equals(INACTIVE)) {
+            throw new InactiveAccountException(
+                    "Account is inactive"
+            );
+        }
+    }
+
+
+    // ===== Getters =====
 
     public int getAccountNumber() {
         return accountNumber;
@@ -100,58 +209,5 @@ public class Account {
 
     public String getStatus() {
         return status;
-    }
-
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setAge(int age) {
-        this.age = age;
-    }
-
-
-    public boolean closeAccount() {
-        if (status.equals(INACTIVE)) {
-            return false;
-        }
-
-        status = INACTIVE;
-        return true;
-    }
-
-
-    public boolean reopenAccount() {
-        if (status.equals(ACTIVE)) {
-            return false;
-        }
-
-        status = ACTIVE;
-        return true;
-    }
-
-
-    public boolean setPin(int pin) {
-        if (pin < MIN_PIN || pin > MAX_PIN) {
-            return false;
-        }
-
-        this.pin = pin;
-        return true;
-    }
-
-
-    public boolean verifyPin(int pin) {
-        if (!hasPin()) {
-            return false;
-        }
-
-        return pin == this.pin;
-    }
-
-
-    public boolean hasPin() {
-        return this.pin != null;
     }
 }
