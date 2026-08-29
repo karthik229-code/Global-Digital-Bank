@@ -3,126 +3,250 @@ package org.example;
 public class TestAccountEnhanced {
 
     public static void displayAccount(Account account) {
-        System.out.printf("Account #%d | %s (%d yrs) | %s | ₹%.1f | %s | PIN: %s%n",
+        System.out.printf(
+                "Account#%d | %s (%d yrs) | %s | ₹%.1f | %s | PIN: %s%n",
                 account.getAccountNumber(),
                 account.getName(),
                 account.getAge(),
                 account.getAccountType(),
                 account.getBalance(),
                 account.getStatus(),
-                (account.hasPin() ? "Yes" : "No"));
+                account.hasPin() ? "Yes" : "No"
+        );
     }
 
     public static void main(String[] args) {
 
         System.out.println("=".repeat(80));
-        System.out.println("    ENHANCED ACCOUNT TEST (BOOLEAN RETURNS)");
+        System.out.println("        ENHANCED ACCOUNT TEST");
         System.out.println("=".repeat(80));
 
-        System.out.println(">>> Test 1: Valid Account Creation");
 
-        Account account1 = new Account(1001, "John Doe", 25, 1000, "Savings");
+        // Test 1: Valid Account Creation
+        System.out.println("\n>>> Test 1: Valid Account Creation");
 
-        displayAccount(account1);
+        try {
+            Account account1 =
+                    new Account(1001, "John Doe", 25, 1000, "Savings");
 
-        System.out.println("\n>>> Test 2: Invalid Age (under 18)");
-        System.out.println("Creating account with age 16");
+            System.out.println("Account created successfully");
+            displayAccount(account1);
 
-        Account account2 = new Account(1002, "Young Kid", 16, 500, "Savings");
+        } catch (IllegalArgumentException e) {
+            System.out.println("FAILED: " + e.getMessage());
+        }
 
-        System.out.println("Age auto-corrected to: " + account2.getAge());
-        displayAccount(account2);
 
+        // Test 2: Invalid Age
+        System.out.println("\n>>> Test 2: Invalid Age");
+
+        try {
+            Account account2 =
+                    new Account(1002, "Young Kid", 16, 500, "Savings");
+
+            System.out.println("FAILED: Account should not have been created");
+
+        } catch (IllegalArgumentException e) {
+            System.out.println("PASS: " + e.getMessage());
+        }
+
+
+        // Test 3: Invalid Account Type
         System.out.println("\n>>> Test 3: Invalid Account Type");
-        System.out.println("Creating account with type \"Invalid\"");
 
-        Account account3 = new Account(1003, "Test User", 25, 500, "Invalid");
+        try {
+            Account account3 =
+                    new Account(1003, "Test User", 25, 1000, "Invalid");
 
-        System.out.println("Account type defaulted to: " + account3.getAccountType());
-        displayAccount(account3);
+            System.out.println("FAILED: Account should not have been created");
 
-        System.out.println("\n>>> Test 4: Minimum Balance Enforcement on Creation");
-        System.out.println("Creating Savings account with ₹300 (below minimum)");
+        } catch (IllegalArgumentException e) {
+            System.out.println("PASS: " + e.getMessage());
+        }
 
-        Account account4 = new Account(1004, "Bob Wilson", 25, 300, "Savings");
 
-        System.out.println("Balance auto-corrected to minimum: ₹" + account4.getBalance());
-        displayAccount(account4);
+        // Test 4: Minimum Balance on Creation
+        System.out.println("\n>>> Test 4: Minimum Balance Validation");
 
-        System.out.println("\n>>> Test 5: Withdrawal with Minimum Balance");
+        try {
+            Account account4 =
+                    new Account(1004, "Bob Wilson", 25, 300, "Savings");
 
-        Account account5 = new Account(1005, "Alice Brown", 30, 1000, "Current");
-        account5.setPin(1111);
+            System.out.println("FAILED: Account should not have been created");
 
-        System.out.print("Initial: ");
+        } catch (IllegalArgumentException e) {
+            System.out.println("PASS: " + e.getMessage());
+        }
+
+
+        // Test 5: Deposit
+        System.out.println("\n>>> Test 5: Deposit");
+
+        Account account5 =
+                new Account(1005, "Alice Brown", 30, 1000, "Savings");
+
         displayAccount(account5);
 
-        System.out.println("Withdrawing ₹200.0: "
-                + (account5.withdraw(200, 1111) ? "SUCCESS" : "FAILED"));
+        try {
+            account5.deposit(500);
 
-        System.out.println("New Balance: ₹" + account5.getBalance());
+            System.out.println("Deposit ₹500: SUCCESS");
+            System.out.println("New Balance: ₹" + account5.getBalance());
 
-        System.out.print("After Withdrawal: ");
-        displayAccount(account5);
+        } catch (AccountException e) {
+            System.out.println("FAILED: " + e.getMessage());
+        }
 
-        System.out.println("Withdrawing ₹900.0 (minimum balance violation): "
-                + (account5.withdraw(900, 1111) ? "SUCCESS" : "FAILED"));
 
-        System.out.println("Current Balance: ₹" + account5.getBalance());
+        // Test 6: Invalid Deposit
+        System.out.println("\n>>> Test 6: Invalid Deposit");
 
-        System.out.println("\n>>> Test 6: Account Status Management");
+        try {
+            account5.deposit(-100);
 
-        Account account6 = new Account(1006, "Charlie Green", 35, 2000, "Savings");
+            System.out.println("FAILED: Invalid deposit was accepted");
 
-        System.out.print("Initial: ");
-        displayAccount(account6);
+        } catch (InvalidAmountException e) {
+            System.out.println("PASS: " + e.getMessage());
+        } catch (AccountException e) {
+            System.out.println("FAILED: Unexpected exception: "
+                    + e.getMessage());
+        }
 
-        System.out.println("Closing Account: "
-                + (account6.closeAccount() ? "SUCCESS" : "FAILED"));
 
-        System.out.print("After Close: ");
-        displayAccount(account6);
-
-        System.out.println("Depositing ₹500.0 to closed account: "
-                + (account6.deposit(500) ? "SUCCESS" : "FAILED (Account inactive)"));
-
-        System.out.println("Reopening Account: "
-                + (account6.reopenAccount() ? "SUCCESS" : "FAILED"));
-
-        System.out.print("After Reopen: ");
-        displayAccount(account6);
-
+        // Test 7: PIN Protection
         System.out.println("\n>>> Test 7: PIN Protection");
 
-        Account account7 = new Account(1007, "Diana Prince", 28, 1500, "Savings");
+        try {
+            account5.setPin(1234);
+            System.out.println("PIN set successfully");
 
-        System.out.println("Setting PIN 1234: "
-                + (account7.setPin(1234) ? "SUCCESS" : "FAILED"));
+        } catch (IllegalArgumentException e) {
+            System.out.println("FAILED: " + e.getMessage());
+        }
 
-        System.out.println("Withdrawing ₹200.0 with correct PIN (1234): "
-                + (account7.withdraw(200, 1234) ? "SUCCESS" : "FAILED"));
+        try {
+            account5.withdraw(200, 1234);
 
-        System.out.println("New Balance: ₹" + account7.getBalance());
+            System.out.println("Correct PIN withdrawal: SUCCESS");
+            System.out.println("New Balance: ₹" + account5.getBalance());
 
-        System.out.println("Withdrawing ₹100.0 with incorrect PIN (9999): "
-                + (account7.withdraw(100, 9999) ? "SUCCESS" : "FAILED (Incorrect PIN)"));
+        } catch (AccountException e) {
+            System.out.println("FAILED: " + e.getMessage());
+        }
 
-        System.out.println("Withdrawing ₹100.0 with PIN not set: "
-                + (account1.withdraw(100, 1223) ? "SUCCESS" : "FAILED (PIN not set)"));
 
-        System.out.println("\n>>> Test 8: All Accounts Summary");
+        // Test 8: Incorrect PIN
+        System.out.println("\n>>> Test 8: Incorrect PIN");
 
-        displayAccount(account1);
-        displayAccount(account2);
-        displayAccount(account3);
-        displayAccount(account4);
-        displayAccount(account5);
-        displayAccount(account6);
-        displayAccount(account7);
+        try {
+            account5.withdraw(100, 9999);
 
-        System.out.println();
-        System.out.println("=".repeat(80));
-        System.out.println("    ENHANCED TEST COMPLETED!");
+            System.out.println("FAILED: Incorrect PIN accepted");
+
+        } catch (InvalidPinException e) {
+            System.out.println("PASS: " + e.getMessage());
+
+        } catch (AccountException e) {
+            System.out.println("FAILED: Unexpected exception: "
+                    + e.getMessage());
+        }
+
+
+        // Test 9: Insufficient Balance
+        System.out.println("\n>>> Test 9: Insufficient Balance");
+
+        try {
+            account5.withdraw(5000, 1234);
+
+            System.out.println("FAILED: Withdrawal should not succeed");
+
+        } catch (InsufficientBalanceException e) {
+            System.out.println("PASS: " + e.getMessage());
+
+        } catch (AccountException e) {
+            System.out.println("FAILED: Unexpected exception: "
+                    + e.getMessage());
+        }
+
+
+        // Test 10: Minimum Balance Violation
+        System.out.println("\n>>> Test 10: Minimum Balance Violation");
+
+        try {
+            account5.withdraw(700, 1234);
+
+            System.out.println("FAILED: Minimum balance should be protected");
+
+        } catch (MinimumBalanceViolationException e) {
+            System.out.println("PASS: " + e.getMessage());
+
+        } catch (AccountException e) {
+            System.out.println("FAILED: Unexpected exception: "
+                    + e.getMessage());
+        }
+
+
+        // Test 11: Close Account
+        System.out.println("\n>>> Test 11: Account Status Management");
+
+        try {
+            account5.closeAccount();
+
+            System.out.println("Account closed successfully");
+            displayAccount(account5);
+
+        } catch (IllegalStateException e) {
+            System.out.println("FAILED: " + e.getMessage());
+        }
+
+
+        // Test 12: Operation on Inactive Account
+        System.out.println("\n>>> Test 12: Inactive Account");
+
+        try {
+            account5.deposit(500);
+
+            System.out.println("FAILED: Deposit should not be allowed");
+
+        } catch (InactiveAccountException e) {
+            System.out.println("PASS: " + e.getMessage());
+
+        } catch (AccountException e) {
+            System.out.println("FAILED: Unexpected exception: "
+                    + e.getMessage());
+        }
+
+
+        // Test 13: Reopen Account
+        System.out.println("\n>>> Test 13: Reopen Account");
+
+        try {
+            account5.reopenAccount();
+
+            System.out.println("Account reopened successfully");
+            displayAccount(account5);
+
+        } catch (IllegalStateException e) {
+            System.out.println("FAILED: " + e.getMessage());
+        }
+
+
+        // Test 14: Invalid PIN
+        System.out.println("\n>>> Test 14: Invalid PIN");
+
+        try {
+            account5.setPin(123);
+
+            System.out.println("FAILED: Invalid PIN was accepted");
+
+        } catch (IllegalArgumentException e) {
+            System.out.println("PASS: " + e.getMessage());
+        }
+
+
+        System.out.println("\n" + "=".repeat(80));
+        System.out.println("        ENHANCED TEST COMPLETED");
         System.out.println("=".repeat(80));
     }
 }
