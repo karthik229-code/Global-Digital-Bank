@@ -10,8 +10,10 @@ public class Account {
     private static final int MIN_PIN = 1000;
     private static final int MAX_PIN = 9999;
 
-    private static final String SAVINGS = "Savings";
-    private static final String CURRENT = "Current";
+    private static final String SAVINGS = "SAVINGS";
+    private static final String CURRENT = "CURRENT";
+    private static final String FIXED_DEPOSIT = "FIXED_DEPOSIT";
+    private static final String SALARY = "SALARY";
 
     private static final String ACTIVE = "Active";
     private static final String INACTIVE = "Inactive";
@@ -36,13 +38,21 @@ public class Account {
             throw new IllegalArgumentException("Age must be at least 18");
         }
 
-        if (!SAVINGS.equals(accountType) && !CURRENT.equals(accountType)) {
+        if (!SAVINGS.equals(accountType)
+                && !CURRENT.equals(accountType)
+                && !FIXED_DEPOSIT.equals(accountType)
+                && !SALARY.equals(accountType)) {
+
             throw new IllegalArgumentException("Invalid account type");
         }
 
-        double minimumBalance = SAVINGS.equals(accountType)
-                ? MIN_BALANCE_SAVINGS
-                : MIN_BALANCE_CURRENT;
+        double minimumBalance = 0;
+
+        if (SAVINGS.equals(accountType)) {
+            minimumBalance = MIN_BALANCE_SAVINGS;
+        } else if (CURRENT.equals(accountType)) {
+            minimumBalance = MIN_BALANCE_CURRENT;
+        }
 
         if (initialBalance < minimumBalance) {
             throw new IllegalArgumentException(
@@ -168,9 +178,13 @@ public class Account {
 
     private double getMinimumBalance() {
 
-        return SAVINGS.equals(accountType)
-                ? MIN_BALANCE_SAVINGS
-                : MIN_BALANCE_CURRENT;
+        if (SAVINGS.equals(accountType)) {
+            return MIN_BALANCE_SAVINGS;
+        } else if (CURRENT.equals(accountType)) {
+            return MIN_BALANCE_CURRENT;
+        }
+
+        return 0;
     }
 
 
