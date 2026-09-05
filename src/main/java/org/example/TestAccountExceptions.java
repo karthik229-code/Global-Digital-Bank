@@ -1,25 +1,12 @@
 package org.example;
 
-public class TestAccountEnhanced {
-
-    public static void displayAccount(Account account) {
-        System.out.printf(
-                "Account#%d | %s (%d yrs) | %s | ₹%.1f | %s | PIN: %s%n",
-                account.getAccountNumber(),
-                account.getName(),
-                account.getAge(),
-                account.getAccountType(),
-                account.getBalance(),
-                account.getStatus(),
-                account.hasPin() ? "Yes" : "No"
-        );
-    }
+public class TestAccountExceptions {
 
     public static void main(String[] args) {
 
-        System.out.println("=".repeat(80));
-        System.out.println("        ENHANCED ACCOUNT TEST");
-        System.out.println("=".repeat(80));
+        System.out.println("=".repeat(70));
+        System.out.println("        ACCOUNT EXCEPTION TESTS");
+        System.out.println("=".repeat(70));
 
 
         // Test 1: Valid Account Creation
@@ -29,11 +16,13 @@ public class TestAccountEnhanced {
             Account account1 =
                     new Account(1001, "John Doe", 25, 1000, "Savings");
 
-            System.out.println("Account created successfully");
-            displayAccount(account1);
+            System.out.println("PASS: Account created successfully");
+            System.out.println("Account Number: " + account1.getAccountNumber());
+            System.out.println("Name: " + account1.getName());
+            System.out.println("Balance: ₹" + account1.getBalance());
 
         } catch (IllegalArgumentException e) {
-            System.out.println("FAILED: " + e.getMessage());
+            System.out.println("FAIL: " + e.getMessage());
         }
 
 
@@ -42,9 +31,9 @@ public class TestAccountEnhanced {
 
         try {
             Account account2 =
-                    new Account(1002, "Young Kid", 16, 500, "Savings");
+                    new Account(1002, "Young Kid", 16, 1000, "Savings");
 
-            System.out.println("FAILED: Account should not have been created");
+            System.out.println("FAIL: Account should not have been created");
 
         } catch (IllegalArgumentException e) {
             System.out.println("PASS: " + e.getMessage());
@@ -58,7 +47,7 @@ public class TestAccountEnhanced {
             Account account3 =
                     new Account(1003, "Test User", 25, 1000, "Invalid");
 
-            System.out.println("FAILED: Account should not have been created");
+            System.out.println("FAIL: Account should not have been created");
 
         } catch (IllegalArgumentException e) {
             System.out.println("PASS: " + e.getMessage());
@@ -72,7 +61,7 @@ public class TestAccountEnhanced {
             Account account4 =
                     new Account(1004, "Bob Wilson", 25, 300, "Savings");
 
-            System.out.println("FAILED: Account should not have been created");
+            System.out.println("FAIL: Account should not have been created");
 
         } catch (IllegalArgumentException e) {
             System.out.println("PASS: " + e.getMessage());
@@ -80,21 +69,19 @@ public class TestAccountEnhanced {
 
 
         // Test 5: Deposit
-        System.out.println("\n>>> Test 5: Deposit");
+        System.out.println("\n>>> Test 5: Valid Deposit");
 
         Account account5 =
                 new Account(1005, "Alice Brown", 30, 1000, "Savings");
 
-        displayAccount(account5);
-
         try {
             account5.deposit(500);
 
-            System.out.println("Deposit ₹500: SUCCESS");
+            System.out.println("PASS: Deposit successful");
             System.out.println("New Balance: ₹" + account5.getBalance());
 
         } catch (AccountException e) {
-            System.out.println("FAILED: " + e.getMessage());
+            System.out.println("FAIL: " + e.getMessage());
         }
 
 
@@ -104,12 +91,13 @@ public class TestAccountEnhanced {
         try {
             account5.deposit(-100);
 
-            System.out.println("FAILED: Invalid deposit was accepted");
+            System.out.println("FAIL: Invalid deposit was accepted");
 
         } catch (InvalidAmountException e) {
             System.out.println("PASS: " + e.getMessage());
+
         } catch (AccountException e) {
-            System.out.println("FAILED: Unexpected exception: "
+            System.out.println("FAIL: Unexpected exception: "
                     + e.getMessage());
         }
 
@@ -119,20 +107,20 @@ public class TestAccountEnhanced {
 
         try {
             account5.setPin(1234);
-            System.out.println("PIN set successfully");
+            System.out.println("PASS: PIN set successfully");
 
         } catch (IllegalArgumentException e) {
-            System.out.println("FAILED: " + e.getMessage());
+            System.out.println("FAIL: " + e.getMessage());
         }
 
         try {
             account5.withdraw(200, 1234);
 
-            System.out.println("Correct PIN withdrawal: SUCCESS");
+            System.out.println("PASS: Correct PIN withdrawal successful");
             System.out.println("New Balance: ₹" + account5.getBalance());
 
         } catch (AccountException e) {
-            System.out.println("FAILED: " + e.getMessage());
+            System.out.println("FAIL: " + e.getMessage());
         }
 
 
@@ -142,13 +130,13 @@ public class TestAccountEnhanced {
         try {
             account5.withdraw(100, 9999);
 
-            System.out.println("FAILED: Incorrect PIN accepted");
+            System.out.println("FAIL: Incorrect PIN was accepted");
 
         } catch (InvalidPinException e) {
             System.out.println("PASS: " + e.getMessage());
 
         } catch (AccountException e) {
-            System.out.println("FAILED: Unexpected exception: "
+            System.out.println("FAIL: Unexpected exception: "
                     + e.getMessage());
         }
 
@@ -159,13 +147,13 @@ public class TestAccountEnhanced {
         try {
             account5.withdraw(5000, 1234);
 
-            System.out.println("FAILED: Withdrawal should not succeed");
+            System.out.println("FAIL: Withdrawal should not succeed");
 
         } catch (InsufficientBalanceException e) {
             System.out.println("PASS: " + e.getMessage());
 
         } catch (AccountException e) {
-            System.out.println("FAILED: Unexpected exception: "
+            System.out.println("FAIL: Unexpected exception: "
                     + e.getMessage());
         }
 
@@ -174,30 +162,30 @@ public class TestAccountEnhanced {
         System.out.println("\n>>> Test 10: Minimum Balance Violation");
 
         try {
-            account5.withdraw(700, 1234);
+            account5.withdraw(900, 1234);
 
-            System.out.println("FAILED: Minimum balance should be protected");
+            System.out.println("FAIL: Minimum balance should be protected");
 
         } catch (MinimumBalanceViolationException e) {
             System.out.println("PASS: " + e.getMessage());
 
         } catch (AccountException e) {
-            System.out.println("FAILED: Unexpected exception: "
+            System.out.println("FAIL: Unexpected exception: "
                     + e.getMessage());
         }
 
 
         // Test 11: Close Account
-        System.out.println("\n>>> Test 11: Account Status Management");
+        System.out.println("\n>>> Test 11: Close Account");
 
         try {
             account5.closeAccount();
 
-            System.out.println("Account closed successfully");
-            displayAccount(account5);
+            System.out.println("PASS: Account closed successfully");
+            System.out.println("Status: " + account5.getStatus());
 
         } catch (IllegalStateException e) {
-            System.out.println("FAILED: " + e.getMessage());
+            System.out.println("FAIL: " + e.getMessage());
         }
 
 
@@ -207,13 +195,13 @@ public class TestAccountEnhanced {
         try {
             account5.deposit(500);
 
-            System.out.println("FAILED: Deposit should not be allowed");
+            System.out.println("FAIL: Deposit should not be allowed");
 
         } catch (InactiveAccountException e) {
             System.out.println("PASS: " + e.getMessage());
 
         } catch (AccountException e) {
-            System.out.println("FAILED: Unexpected exception: "
+            System.out.println("FAIL: Unexpected exception: "
                     + e.getMessage());
         }
 
@@ -224,11 +212,11 @@ public class TestAccountEnhanced {
         try {
             account5.reopenAccount();
 
-            System.out.println("Account reopened successfully");
-            displayAccount(account5);
+            System.out.println("PASS: Account reopened successfully");
+            System.out.println("Status: " + account5.getStatus());
 
         } catch (IllegalStateException e) {
-            System.out.println("FAILED: " + e.getMessage());
+            System.out.println("FAIL: " + e.getMessage());
         }
 
 
@@ -238,15 +226,35 @@ public class TestAccountEnhanced {
         try {
             account5.setPin(123);
 
-            System.out.println("FAILED: Invalid PIN was accepted");
+            System.out.println("FAIL: Invalid PIN was accepted");
 
         } catch (IllegalArgumentException e) {
             System.out.println("PASS: " + e.getMessage());
         }
 
 
-        System.out.println("\n" + "=".repeat(80));
-        System.out.println("        ENHANCED TEST COMPLETED");
-        System.out.println("=".repeat(80));
+        // Test 15: PIN Not Set
+        System.out.println("\n>>> Test 15: Withdrawal Without PIN");
+
+        try {
+            Account account6 =
+                    new Account(1006, "No Pin User", 25, 1000, "Savings");
+
+            account6.withdraw(100, 1234);
+
+            System.out.println("FAIL: Withdrawal should not be allowed");
+
+        } catch (InvalidPinException e) {
+            System.out.println("PASS: " + e.getMessage());
+
+        } catch (AccountException e) {
+            System.out.println("FAIL: Unexpected exception: "
+                    + e.getMessage());
+        }
+
+
+        System.out.println("\n" + "=".repeat(70));
+        System.out.println("        ALL EXCEPTION TESTS COMPLETED");
+        System.out.println("=".repeat(70));
     }
 }
