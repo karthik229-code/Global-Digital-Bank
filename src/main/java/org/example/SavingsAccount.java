@@ -27,6 +27,11 @@ public class SavingsAccount extends Account {
         }
     }
 
+    public double calculateInterest(int years) {
+
+        return getBalance() * interestRate * years / 100;
+    }
+
     public double getMinBalance() {
         return minBalance;
     }
