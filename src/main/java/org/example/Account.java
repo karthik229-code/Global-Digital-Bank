@@ -199,6 +199,13 @@ public class Account {
     }
 
 
+    // ===== Protected Helper for Subclasses =====
+
+    protected void setBalance(double balance) {
+        this.balance = balance;
+    }
+
+
     // ===== Getters =====
 
     public int getAccountNumber() {
