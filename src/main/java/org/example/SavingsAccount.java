@@ -1,42 +1,26 @@
 package org.example;
 
-public class SavingsAccount extends Account {
+public class SavingsAccount extends AbstractAccount {
 
-    private double minBalance;
-    private double interestRate;
+    private static final double MINIMUM_BALANCE = 500.0;
 
     public SavingsAccount(int accountNumber, String name, int age,
-                          double initialBalance,
-                          double minBalance, double interestRate) {
+                          double initialBalance) {
 
-        super(accountNumber, name, age, initialBalance, "SAVINGS");
-
-        this.minBalance = minBalance;
-        this.interestRate = interestRate;
+        super(accountNumber, name, age, initialBalance, "Savings");
     }
 
-    public void applyInterest() {
+    @Override
+    public void processDebit(double amount) throws AccountException {
 
-        double interest = getBalance() * interestRate / 100;
+        double remainingBalance = getBalance() - amount;
 
-        try {
-            deposit(interest);
-        } catch (AccountException e) {
-            System.out.println("Could not apply interest: "
-                    + e.getMessage());
+        if (remainingBalance < MINIMUM_BALANCE) {
+            throw new MinimumBalanceViolationException(
+                    "Withdrawal would violate minimum balance requirement"
+            );
         }
-    }
 
-    public double calculateInterest(int years) {
-
-        return getBalance() * interestRate * years / 100;
-    }
-
-    public double getMinBalance() {
-        return minBalance;
-    }
-
-    public double getInterestRate() {
-        return interestRate;
+        setBalance(remainingBalance);
     }
 }
