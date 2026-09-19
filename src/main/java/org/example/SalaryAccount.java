@@ -1,25 +1,22 @@
 package org.example;
 
-public class SalaryAccount extends Account {
-
-    private String employerName;
-    private int inactiveMonths;
+public class SalaryAccount extends AbstractAccount {
 
     public SalaryAccount(int accountNumber, String name, int age,
-                         double initialBalance,
-                         String employerName, int inactiveMonths) {
+                         double initialBalance) {
 
-        super(accountNumber, name, age, initialBalance, "SALARY");
-
-        this.employerName = employerName;
-        this.inactiveMonths = inactiveMonths;
+        super(accountNumber, name, age, initialBalance, "Salary");
     }
 
-    public String getEmployerName() {
-        return employerName;
-    }
+    @Override
+    public void processDebit(double amount) throws AccountException {
 
-    public int getInactiveMonths() {
-        return inactiveMonths;
+        if (amount > getBalance()) {
+            throw new InsufficientBalanceException(
+                    "Insufficient balance"
+            );
+        }
+
+        setBalance(getBalance() - amount);
     }
 }

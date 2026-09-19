@@ -1,33 +1,18 @@
 package org.example;
 
-public class FixedDepositAccount extends Account {
-
-    private int tenureMonths;
-    private double interestRate;
+public class FixedDepositAccount extends AbstractAccount {
 
     public FixedDepositAccount(int accountNumber, String name, int age,
-                               double initialBalance,
-                               int tenureMonths, double interestRate) {
+                               double initialBalance) {
 
-        super(accountNumber, name, age, initialBalance, "FIXED_DEPOSIT");
-
-        this.tenureMonths = tenureMonths;
-        this.interestRate = interestRate;
+        super(accountNumber, name, age, initialBalance, "FixedDeposit");
     }
 
-    public double calculateMaturityAmount() {
+    @Override
+    public void processDebit(double amount) throws AccountException {
 
-        double years = tenureMonths / 12.0;
-
-        return getBalance() *
-                Math.pow(1 + interestRate / 100, years);
-    }
-
-    public int getTenureMonths() {
-        return tenureMonths;
-    }
-
-    public double getInterestRate() {
-        return interestRate;
+        throw new AccountException(
+                "Premature withdrawal is not allowed for Fixed Deposit"
+        );
     }
 }
