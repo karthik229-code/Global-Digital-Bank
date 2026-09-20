@@ -1,8 +1,6 @@
 package org.example;
 
-public abstract class AbstractAccount {
-
-    // ===== Fields =====
+public abstract class AbstractAccount implements IAccount {
 
     private int accountNumber;
     private String name;
@@ -11,9 +9,6 @@ public abstract class AbstractAccount {
     private String accountType;
     private String status;
     private Integer pin;
-
-
-    // ===== Constructor =====
 
     public AbstractAccount(int accountNumber,
                            String name,
@@ -30,21 +25,15 @@ public abstract class AbstractAccount {
         this.pin = null;
     }
 
-
-    // ===== Abstract Method =====
-
     public abstract void processDebit(double amount)
             throws AccountException;
 
-
-    // ===== Common Methods =====
-
+    @Override
     public void deposit(double amount)
-            throws InvalidAmountException,
-            InactiveAccountException {
+            throws InvalidAmountException {
 
         if (!"Active".equals(status)) {
-            throw new InactiveAccountException(
+            throw new InvalidAmountException(
                     "Account is inactive"
             );
         }
@@ -56,6 +45,21 @@ public abstract class AbstractAccount {
         }
 
         balance += amount;
+    }
+
+    @Override
+    public void withdraw(double amount, String pin)
+            throws AccountException {
+
+        int numericPin;
+
+        try {
+            numericPin = Integer.parseInt(pin);
+        } catch (NumberFormatException e) {
+            throw new InvalidPinException("Invalid PIN");
+        }
+
+        withdraw(amount, numericPin);
     }
 
     public void withdraw(double amount, int pin)
@@ -82,12 +86,9 @@ public abstract class AbstractAccount {
             throws InvalidPinException {
 
         if (!hasPin() || !verifyPin(pin)) {
-            throw new InvalidPinException(
-                    "Invalid PIN"
-            );
+            throw new InvalidPinException("Invalid PIN");
         }
     }
-
 
     public void changePin(int newPin)
             throws IllegalArgumentException {
@@ -101,37 +102,32 @@ public abstract class AbstractAccount {
         this.pin = newPin;
     }
 
-
+    @Override
     public void displayAccountInfo() {
 
         System.out.println(
                 "Account #" + accountNumber
                         + " | " + name
                         + " | " + accountType
-                        + " | Balance: ₹" + balance
+                        + " | Balance: Rs " + balance
                         + " | Status: " + status
         );
     }
-
-
-    // ===== PIN Helpers =====
 
     public boolean verifyPin(int pin) {
         return hasPin() && this.pin == pin;
     }
 
-
     public boolean hasPin() {
         return this.pin != null;
     }
 
-
-    // ===== Getters =====
-
+    @Override
     public int getAccountNumber() {
         return accountNumber;
     }
 
+    @Override
     public String getName() {
         return name;
     }
@@ -140,20 +136,20 @@ public abstract class AbstractAccount {
         return age;
     }
 
+    @Override
     public double getBalance() {
         return balance;
     }
 
+    @Override
     public String getAccountType() {
         return accountType;
     }
 
+    @Override
     public String getStatus() {
         return status;
     }
-
-
-    // ===== Protected Balance Setter =====
 
     protected void setBalance(double balance) {
         this.balance = balance;
