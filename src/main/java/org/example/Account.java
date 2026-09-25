@@ -1,8 +1,9 @@
 package org.example;
 
+import java.time.LocalDateTime;
+
 public class Account {
 
-    // ===== Constants =====
     private static final double MIN_BALANCE_SAVINGS = 500.0;
     private static final double MIN_BALANCE_CURRENT = 1000.0;
 
@@ -18,8 +19,6 @@ public class Account {
     private static final String ACTIVE = "Active";
     private static final String INACTIVE = "Inactive";
 
-
-    // ===== Fields =====
     private int accountNumber;
     private String name;
     private int age;
@@ -28,8 +27,9 @@ public class Account {
     private String status;
     private Integer pin;
 
+    private double dailyTransferTotal;
+    private LocalDateTime lastTransferDate;
 
-    // ===== Constructor =====
     public Account(int accountNumber, String name, int age,
                    double initialBalance, String accountType)
             throws IllegalArgumentException {
@@ -42,7 +42,6 @@ public class Account {
                 && !CURRENT.equals(accountType)
                 && !FIXED_DEPOSIT.equals(accountType)
                 && !SALARY.equals(accountType)) {
-
             throw new IllegalArgumentException("Invalid account type");
         }
 
@@ -67,10 +66,9 @@ public class Account {
         this.accountType = accountType;
         this.status = ACTIVE;
         this.pin = null;
+        this.dailyTransferTotal = 0.0;
+        this.lastTransferDate = LocalDateTime.now();
     }
-
-
-    // ===== Business Methods =====
 
     public void deposit(double amount)
             throws InvalidAmountException, InactiveAccountException {
@@ -85,7 +83,6 @@ public class Account {
 
         balance += amount;
     }
-
 
     public void withdraw(double amount, int pin)
             throws InvalidAmountException,
@@ -123,8 +120,9 @@ public class Account {
         balance -= amount;
     }
 
-
-    // ===== Account Status Management =====
+    public boolean canWithdraw(double amount) {
+        return amount > 0 && amount <= balance;
+    }
 
     public void closeAccount() throws IllegalStateException {
 
@@ -137,7 +135,6 @@ public class Account {
         status = INACTIVE;
     }
 
-
     public void reopenAccount() throws IllegalStateException {
 
         if (status.equals(ACTIVE)) {
@@ -148,9 +145,6 @@ public class Account {
 
         status = ACTIVE;
     }
-
-
-    // ===== PIN Management =====
 
     public void setPin(int pin) throws IllegalArgumentException {
 
@@ -163,18 +157,62 @@ public class Account {
         this.pin = pin;
     }
 
-
     public boolean verifyPin(int pin) {
         return hasPin() && this.pin == pin;
     }
-
 
     public boolean hasPin() {
         return this.pin != null;
     }
 
+    public double getDailyTransferLimit() {
+        return AccountRulesEngine.getInstance()
+                .getDailyTransferLimit(
+                        getAccountType(),
+                        getTenureYears()
+                );
+    }
 
-    // ===== Helper Methods =====
+    public double getRemainingDailyTransferLimit() {
+
+        resetDailyTransferIfNeeded();
+
+        return Math.max(
+                0.0,
+                getDailyTransferLimit() - dailyTransferTotal
+        );
+    }
+
+    public boolean canTransfer(double amount) {
+
+        resetDailyTransferIfNeeded();
+
+        return dailyTransferTotal + amount
+                <= getDailyTransferLimit();
+    }
+
+    public void updateDailyTransferTotal(double amount) {
+
+        resetDailyTransferIfNeeded();
+
+        dailyTransferTotal += amount;
+        lastTransferDate = LocalDateTime.now();
+    }
+
+    public void resetDailyTransferIfNeeded() {
+
+        if (lastTransferDate == null
+                || !lastTransferDate.toLocalDate()
+                .equals(LocalDateTime.now().toLocalDate())) {
+
+            dailyTransferTotal = 0.0;
+            lastTransferDate = LocalDateTime.now();
+        }
+    }
+
+    public int getTenureYears() {
+        return 0;
+    }
 
     private double getMinimumBalance() {
 
@@ -187,7 +225,6 @@ public class Account {
         return 0;
     }
 
-
     private void validateActive()
             throws InactiveAccountException {
 
@@ -198,15 +235,9 @@ public class Account {
         }
     }
 
-
-    // ===== Protected Helper for Subclasses =====
-
     protected void setBalance(double balance) {
         this.balance = balance;
     }
-
-
-    // ===== Getters =====
 
     public int getAccountNumber() {
         return accountNumber;
@@ -230,5 +261,13 @@ public class Account {
 
     public String getStatus() {
         return status;
+    }
+
+    public double getDailyTransferTotal() {
+        return dailyTransferTotal;
+    }
+
+    public LocalDateTime getLastTransferDate() {
+        return lastTransferDate;
     }
 }
