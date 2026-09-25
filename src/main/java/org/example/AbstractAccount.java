@@ -1,5 +1,7 @@
 package org.example;
 
+import java.time.LocalDateTime;
+
 public abstract class AbstractAccount implements IAccount {
 
     private int accountNumber;
@@ -9,6 +11,9 @@ public abstract class AbstractAccount implements IAccount {
     private String accountType;
     private String status;
     private Integer pin;
+
+    private double dailyTransferTotal;
+    private LocalDateTime lastTransferDate;
 
     public AbstractAccount(int accountNumber,
                            String name,
@@ -23,6 +28,8 @@ public abstract class AbstractAccount implements IAccount {
         this.accountType = accountType;
         this.status = "Active";
         this.pin = null;
+        this.dailyTransferTotal = 0.0;
+        this.lastTransferDate = LocalDateTime.now();
     }
 
     public abstract void processDebit(double amount)
@@ -82,6 +89,10 @@ public abstract class AbstractAccount implements IAccount {
         processDebit(amount);
     }
 
+    public boolean canWithdraw(double amount) {
+        return amount > 0 && amount <= balance;
+    }
+
     public void validatePin(int pin)
             throws InvalidPinException {
 
@@ -102,6 +113,12 @@ public abstract class AbstractAccount implements IAccount {
         this.pin = newPin;
     }
 
+    public void setPin(int pin)
+            throws IllegalArgumentException {
+
+        changePin(pin);
+    }
+
     @Override
     public void displayAccountInfo() {
 
@@ -120,6 +137,55 @@ public abstract class AbstractAccount implements IAccount {
 
     public boolean hasPin() {
         return this.pin != null;
+    }
+
+    public double getDailyTransferLimit() {
+        return AccountRulesEngine.getInstance()
+                .getDailyTransferLimit(
+                        getAccountType(),
+                        getTenureYears()
+                );
+    }
+
+    public double getRemainingDailyTransferLimit() {
+
+        resetDailyTransferIfNeeded();
+
+        return Math.max(
+                0.0,
+                getDailyTransferLimit() - dailyTransferTotal
+        );
+    }
+
+    public boolean canTransfer(double amount) {
+
+        resetDailyTransferIfNeeded();
+
+        return dailyTransferTotal + amount
+                <= getDailyTransferLimit();
+    }
+
+    public void updateDailyTransferTotal(double amount) {
+
+        resetDailyTransferIfNeeded();
+
+        dailyTransferTotal += amount;
+        lastTransferDate = LocalDateTime.now();
+    }
+
+    public void resetDailyTransferIfNeeded() {
+
+        if (lastTransferDate == null
+                || !lastTransferDate.toLocalDate()
+                .equals(LocalDateTime.now().toLocalDate())) {
+
+            dailyTransferTotal = 0.0;
+            lastTransferDate = LocalDateTime.now();
+        }
+    }
+
+    public int getTenureYears() {
+        return 0;
     }
 
     @Override
@@ -149,6 +215,14 @@ public abstract class AbstractAccount implements IAccount {
     @Override
     public String getStatus() {
         return status;
+    }
+
+    public double getDailyTransferTotal() {
+        return dailyTransferTotal;
+    }
+
+    public LocalDateTime getLastTransferDate() {
+        return lastTransferDate;
     }
 
     protected void setBalance(double balance) {
