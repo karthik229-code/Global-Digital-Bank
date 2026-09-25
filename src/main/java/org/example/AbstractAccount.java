@@ -54,6 +54,25 @@ public abstract class AbstractAccount implements IAccount {
         balance += amount;
     }
 
+    public Transaction depositWithTransaction(double amount)
+            throws AccountException {
+
+        deposit(amount);
+
+        return new Transaction(
+                Transaction.generateId(),
+                LocalDateTime.now(),
+                accountNumber,
+                TransactionType.DEPOSIT,
+                amount,
+                balance,
+                "SUCCESS",
+                "Deposit of Rs. " + amount,
+                0,
+                accountNumber
+        );
+    }
+
     @Override
     public void withdraw(double amount, String pin)
             throws AccountException {
@@ -87,6 +106,27 @@ public abstract class AbstractAccount implements IAccount {
         }
 
         processDebit(amount);
+    }
+
+    public Transaction withdrawWithTransaction(
+            double amount,
+            int pin)
+            throws AccountException {
+
+        withdraw(amount, pin);
+
+        return new Transaction(
+                Transaction.generateId(),
+                LocalDateTime.now(),
+                accountNumber,
+                TransactionType.WITHDRAW,
+                amount,
+                balance,
+                "SUCCESS",
+                "Withdrawal of Rs. " + amount,
+                accountNumber,
+                0
+        );
     }
 
     public boolean canWithdraw(double amount) {

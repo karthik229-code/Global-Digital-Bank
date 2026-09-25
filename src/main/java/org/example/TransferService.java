@@ -45,4 +45,28 @@ public class TransferService {
         to.deposit(amount);
         from.updateDailyTransferTotal(amount);
     }
+
+    public static Transaction transferWithTransaction(
+            AbstractAccount from,
+            AbstractAccount to,
+            double amount,
+            int pin
+    ) throws AccountException {
+
+        transfer(from, to, amount, pin);
+
+        return new Transaction(
+                Transaction.generateId(),
+                java.time.LocalDateTime.now(),
+                from.getAccountNumber(),
+                TransactionType.TRANSFER,
+                amount,
+                from.getBalance(),
+                "SUCCESS",
+                "Transfer of Rs. " + amount
+                        + " to Account #" + to.getAccountNumber(),
+                from.getAccountNumber(),
+                to.getAccountNumber()
+        );
+    }
 }
