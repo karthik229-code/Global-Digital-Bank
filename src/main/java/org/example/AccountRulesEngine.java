@@ -1,52 +1,43 @@
 package org.example;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class AccountRulesEngine {
 
-    private static final Map<String, Double> MIN_BALANCE_RULES =
-            new HashMap<>();
+    private static final String SAVINGS_RULES_FILE =
+            "config/rules/savings.properties";
 
-    private static final Map<String, Double> INTEREST_RATE_RULES =
-            new HashMap<>();
-
-    static {
-        // Savings minimum balance rules
-        MIN_BALANCE_RULES.put("NEW", 10000.0);
-        MIN_BALANCE_RULES.put("STANDARD", 7500.0);
-        MIN_BALANCE_RULES.put("PREMIUM", 5000.0);
-        MIN_BALANCE_RULES.put("PRIVILEGE", 2500.0);
-
-        // Savings interest rate rules
-        INTEREST_RATE_RULES.put("NEW", 2.70);
-        INTEREST_RATE_RULES.put("STANDARD", 3.00);
-        INTEREST_RATE_RULES.put("PREMIUM", 3.50);
-        INTEREST_RATE_RULES.put("PRIVILEGE", 4.00);
-    }
+    private static final AccountRulesPropertiesLoader SAVINGS_RULES =
+            new AccountRulesPropertiesLoader(SAVINGS_RULES_FILE);
 
     private static String getTenureBucket(int tenureYears) {
 
         if (tenureYears >= 5) {
-            return "PRIVILEGE";
+            return "privilege";
         } else if (tenureYears >= 3) {
-            return "PREMIUM";
+            return "premium";
         } else if (tenureYears >= 1) {
-            return "STANDARD";
+            return "standard";
         } else {
-            return "NEW";
+            return "new";
         }
     }
 
     public static double getSavingsMinBalance(int tenureYears) {
-        return MIN_BALANCE_RULES.get(
-                getTenureBucket(tenureYears)
+
+        String bucket = getTenureBucket(tenureYears);
+
+        return SAVINGS_RULES.getDouble(
+                bucket + ".minBalance",
+                0.0
         );
     }
 
     public static double getSavingsInterestRate(int tenureYears) {
-        return INTEREST_RATE_RULES.get(
-                getTenureBucket(tenureYears)
+
+        String bucket = getTenureBucket(tenureYears);
+
+        return SAVINGS_RULES.getDouble(
+                bucket + ".interestRate",
+                0.0
         );
     }
 
