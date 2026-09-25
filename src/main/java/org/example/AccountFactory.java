@@ -2,12 +2,13 @@ package org.example;
 
 public class AccountFactory {
 
-    public static AbstractAccount createAccount(
+    public static IAccount createAccount(
             String accountType,
             int accountNumber,
             String name,
             int age,
-            double initialBalance) {
+            double initialBalance,
+            int tenureYears) throws AccountException {
 
         switch (accountType.toUpperCase()) {
 
@@ -16,7 +17,8 @@ public class AccountFactory {
                         accountNumber,
                         name,
                         age,
-                        initialBalance
+                        initialBalance,
+                        tenureYears
                 );
 
             case "CURRENT":
@@ -27,8 +29,7 @@ public class AccountFactory {
                         initialBalance
                 );
 
-            case "FIXED_DEPOSIT":
-            case "FD":
+            case "FIXEDDEPOSIT":
                 return new FixedDepositAccount(
                         accountNumber,
                         name,
