@@ -57,12 +57,8 @@ public class AccountService {
         AbstractAccount account =
                 requireAbstractAccount(getAccount(accountNumber));
 
-        int numericPin = parsePin(pin);
-        account.validatePin(numericPin);
-
-        throw new UnsupportedOperationException(
-                "Account closure is not implemented in AbstractAccount"
-        );
+        account.validatePin(parsePin(pin));
+        account.closeAccount();
     }
 
     public Transaction deposit(int accountNumber, double amount)
