@@ -57,12 +57,8 @@ public class AccountService {
         AbstractAccount account =
                 requireAbstractAccount(getAccount(accountNumber));
 
-        int numericPin = parsePin(pin);
-        account.validatePin(numericPin);
-
-        throw new UnsupportedOperationException(
-                "Account closure is not implemented in AbstractAccount"
-        );
+        account.validatePin(parsePin(pin));
+        account.closeAccount();
     }
 
     public Transaction deposit(int accountNumber, double amount)
@@ -129,8 +125,7 @@ public class AccountService {
 
         if (account == null) {
             throw new AccountException(
-                    "Account not found: " + accountNumber
-            );
+                    "Account not found: " + accountNumber);
         }
 
         return account;
@@ -141,7 +136,6 @@ public class AccountService {
     }
 
     public List<Transaction> getTransactionHistory() throws Exception {
-
         List<Transaction> transactions = new ArrayList<>();
 
         for (TransactionCommand command : logger.readAll()) {
@@ -168,7 +162,6 @@ public class AccountService {
     }
 
     private int parsePin(String pin) throws InvalidPinException {
-
         try {
             return Integer.parseInt(pin);
         } catch (NumberFormatException exception) {

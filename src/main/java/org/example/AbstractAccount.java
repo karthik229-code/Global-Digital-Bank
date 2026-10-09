@@ -1,10 +1,13 @@
+
 package org.example;
 
 import java.time.LocalDateTime;
 import java.io.Serializable;
 
 public abstract class AbstractAccount implements IAccount, Serializable {
+
     private static final long serialVersionUID = 1L;
+
     private int accountNumber;
     private String name;
     private int age;
@@ -16,11 +19,12 @@ public abstract class AbstractAccount implements IAccount, Serializable {
     private double dailyTransferTotal;
     private LocalDateTime lastTransferDate;
 
-    public AbstractAccount(int accountNumber,
-                           String name,
-                           int age,
-                           double initialBalance,
-                           String accountType) {
+    public AbstractAccount(
+            int accountNumber,
+            String name,
+            int age,
+            double initialBalance,
+            String accountType) {
 
         this.accountNumber = accountNumber;
         this.name = name;
@@ -41,15 +45,12 @@ public abstract class AbstractAccount implements IAccount, Serializable {
             throws InvalidAmountException {
 
         if (!"Active".equals(status)) {
-            throw new InvalidAmountException(
-                    "Account is inactive"
-            );
+            throw new InvalidAmountException("Account is inactive");
         }
 
         if (amount <= 0) {
             throw new InvalidAmountException(
-                    "Deposit amount must be greater than zero"
-            );
+                    "Deposit amount must be greater than zero");
         }
 
         balance += amount;
@@ -95,23 +96,18 @@ public abstract class AbstractAccount implements IAccount, Serializable {
         validatePin(pin);
 
         if (!"Active".equals(status)) {
-            throw new InactiveAccountException(
-                    "Account is inactive"
-            );
+            throw new InactiveAccountException("Account is inactive");
         }
 
         if (amount <= 0) {
             throw new InvalidAmountException(
-                    "Withdrawal amount must be greater than zero"
-            );
+                    "Withdrawal amount must be greater than zero");
         }
 
         processDebit(amount);
     }
 
-    public Transaction withdrawWithTransaction(
-            double amount,
-            int pin)
+    public Transaction withdrawWithTransaction(double amount, int pin)
             throws AccountException {
 
         withdraw(amount, pin);
@@ -134,35 +130,35 @@ public abstract class AbstractAccount implements IAccount, Serializable {
         return amount > 0 && amount <= balance;
     }
 
-    public void validatePin(int pin)
-            throws InvalidPinException {
-
+    public void validatePin(int pin) throws InvalidPinException {
         if (!hasPin() || !verifyPin(pin)) {
             throw new InvalidPinException("Invalid PIN");
         }
     }
 
-    public void changePin(int newPin)
-            throws IllegalArgumentException {
-
+    public void changePin(int newPin) {
         if (newPin < 1000 || newPin > 9999) {
             throw new IllegalArgumentException(
-                    "PIN must be a 4-digit number"
-            );
+                    "PIN must be a 4-digit number");
         }
 
         this.pin = newPin;
     }
 
-    public void setPin(int pin)
-            throws IllegalArgumentException {
-
+    public void setPin(int pin) {
         changePin(pin);
+    }
+
+    public void closeAccount() {
+        if (!"Active".equals(status)) {
+            throw new IllegalStateException("Account is already closed");
+        }
+
+        status = "Closed";
     }
 
     @Override
     public void displayAccountInfo() {
-
         System.out.println(
                 "Account #" + accountNumber
                         + " | " + name
@@ -189,7 +185,6 @@ public abstract class AbstractAccount implements IAccount, Serializable {
     }
 
     public double getRemainingDailyTransferLimit() {
-
         resetDailyTransferIfNeeded();
 
         return Math.max(
@@ -199,15 +194,12 @@ public abstract class AbstractAccount implements IAccount, Serializable {
     }
 
     public boolean canTransfer(double amount) {
-
         resetDailyTransferIfNeeded();
 
-        return dailyTransferTotal + amount
-                <= getDailyTransferLimit();
+        return dailyTransferTotal + amount <= getDailyTransferLimit();
     }
 
     public void updateDailyTransferTotal(double amount) {
-
         resetDailyTransferIfNeeded();
 
         dailyTransferTotal += amount;
@@ -215,7 +207,6 @@ public abstract class AbstractAccount implements IAccount, Serializable {
     }
 
     public void resetDailyTransferIfNeeded() {
-
         if (lastTransferDate == null
                 || !lastTransferDate.toLocalDate()
                 .equals(LocalDateTime.now().toLocalDate())) {
