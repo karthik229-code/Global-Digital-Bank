@@ -1,9 +1,10 @@
 package org.example;
 
 import java.time.LocalDateTime;
+import java.io.Serializable;
 
-public abstract class AbstractAccount implements IAccount {
-
+public abstract class AbstractAccount implements IAccount, Serializable {
+    private static final long serialVersionUID = 1L;
     private int accountNumber;
     private String name;
     private int age;
