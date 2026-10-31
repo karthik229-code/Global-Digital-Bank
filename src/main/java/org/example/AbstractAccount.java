@@ -260,4 +260,11 @@ public abstract class AbstractAccount implements IAccount, Serializable {
     protected void setBalance(double balance) {
         this.balance = balance;
     }
+    public Integer getPin() {
+        return pin;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 }
