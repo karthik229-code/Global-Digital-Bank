@@ -2,9 +2,8 @@
 package org.example;
 
 import org.example.command.DepositCommand;
-import org.example.command.TransactionCommand;
-import org.example.command.TransferCommand;
 import org.example.command.WithdrawCommand;
+import org.example.command.TransferCommand;
 import org.example.repository.AccountRepository;
 import org.example.repository.TransactionRepository;
 import org.example.repository.RepositoryFactory;
@@ -16,35 +15,32 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
     private final TransactionLogger logger;
-    private final TransferService transferService;
-
-    private int nextAccountNumber = 1001;
 
     public AccountService(
             TransactionLogger logger,
-            TransferService transferService) {
+            TransferService transferService
+    ) {
+        this.logger = logger;
 
         this.accountRepository =
                 RepositoryFactory.createAccountRepository();
 
         this.transactionRepository =
                 RepositoryFactory.createTransactionRepository();
-
-        this.logger = logger;
-        this.transferService = transferService;
     }
 
     public IAccount openAccount(
-            String type,
+            String accountType,
             String name,
             int age,
             double initialBalance,
-            int tenureYears) throws AccountException {
+            int tenureYears
+    ) throws Exception {
 
         int accountNumber = accountRepository.nextAccountNumber();
 
         IAccount account = AccountFactory.createAccount(
-                type,
+                accountType,
                 accountNumber,
                 name,
                 age,
@@ -53,37 +49,44 @@ public class AccountService {
         );
 
         accountRepository.save(account);
-        nextAccountNumber = accountNumber + 1;
 
         return account;
     }
 
-    public void closeAccount(int accountNumber, String pin)
-            throws AccountException {
-
-        AbstractAccount account =
-                requireAbstractAccount(getAccount(accountNumber));
-
-        account.validatePin(parsePin(pin));
-        account.closeAccount();
-
+    public void updateAccount(IAccount account) {
         accountRepository.update(account);
     }
 
-    public Transaction deposit(int accountNumber, double amount)
-            throws Exception {
+    public void closeAccount(
+            int accountNumber,
+            String pin
+    ) throws Exception {
 
-        AbstractAccount account =
-                requireAbstractAccount(getAccount(accountNumber));
+        AbstractAccount account = getAbstractAccount(accountNumber);
 
-        TransactionCommand command =
+        int numericPin = parsePin(pin);
+        account.validatePin(numericPin);
+
+        account.closeAccount();
+        accountRepository.update(account);
+    }
+
+    public Transaction deposit(
+            int accountNumber,
+            double amount
+    ) throws Exception {
+
+        AbstractAccount account = getAbstractAccount(accountNumber);
+
+        DepositCommand command =
                 new DepositCommand(account, amount);
 
         command.execute();
 
         Transaction transaction = command.getTransaction();
-        transactionRepository.save(transaction);
 
+        accountRepository.update(account);
+        transactionRepository.save(transaction);
         logger.log(command);
 
         return transaction;
@@ -92,64 +95,64 @@ public class AccountService {
     public Transaction withdraw(
             int accountNumber,
             double amount,
-            String pin) throws Exception {
+            String pin
+    ) throws Exception {
 
-        AbstractAccount account =
-                requireAbstractAccount(getAccount(accountNumber));
+        AbstractAccount account = getAbstractAccount(accountNumber);
 
-        TransactionCommand command =
-                new WithdrawCommand(account, amount, parsePin(pin));
+        int numericPin = parsePin(pin);
+
+        WithdrawCommand command =
+                new WithdrawCommand(account, amount, numericPin);
 
         command.execute();
 
         Transaction transaction = command.getTransaction();
-        transactionRepository.save(transaction);
 
+        accountRepository.update(account);
+        transactionRepository.save(transaction);
         logger.log(command);
 
         return transaction;
     }
 
     public Transaction transfer(
-            int fromAccount,
-            int toAccount,
+            int sourceAccountNumber,
+            int destinationAccountNumber,
             double amount,
-            String pin) throws Exception {
+            String pin
+    ) throws Exception {
 
-        AbstractAccount source =
-                requireAbstractAccount(getAccount(fromAccount));
+        AbstractAccount sourceAccount =
+                getAbstractAccount(sourceAccountNumber);
 
-        AbstractAccount destination =
-                requireAbstractAccount(getAccount(toAccount));
+        AbstractAccount destinationAccount =
+                getAbstractAccount(destinationAccountNumber);
 
-        TransactionCommand command = new TransferCommand(
-                source,
-                destination,
+        int numericPin = parsePin(pin);
+
+        TransferCommand command = new TransferCommand(
+                sourceAccount,
+                destinationAccount,
                 amount,
-                parsePin(pin)
+                numericPin
         );
 
         command.execute();
 
         Transaction transaction = command.getTransaction();
-        transactionRepository.save(transaction);
 
+        accountRepository.update(sourceAccount);
+        accountRepository.update(destinationAccount);
+
+        transactionRepository.save(transaction);
         logger.log(command);
 
         return transaction;
     }
 
-    public IAccount getAccount(int accountNumber)
-            throws AccountException {
-
-        IAccount account = accountRepository.findById(accountNumber);
-
-        if (account == null) {
-            throw new AccountException(
-                    "Account not found: " + accountNumber);
-        }
-
-        return account;
+    public IAccount getAccount(int accountNumber) {
+        return accountRepository.findById(accountNumber);
     }
 
     public List<IAccount> getAllAccounts() {
@@ -160,25 +163,35 @@ public class AccountService {
         return transactionRepository.findAll();
     }
 
-    public int getNextAccountNumber() {
-        return nextAccountNumber;
+    public List<Transaction> getTransactionHistory(int accountNumber) {
+        return transactionRepository.findByAccount(accountNumber);
     }
 
-    private AbstractAccount requireAbstractAccount(IAccount account)
-            throws AccountException {
+    public int getNextAccountNumber() {
+        return accountRepository.nextAccountNumber();
+    }
+
+    private AbstractAccount getAbstractAccount(int accountNumber)
+            throws Exception {
+
+        IAccount account = accountRepository.findById(accountNumber);
+
+        if (account == null) {
+            throw new Exception("Account not found.");
+        }
 
         if (!(account instanceof AbstractAccount)) {
-            throw new AccountException("Unsupported account type.");
+            throw new Exception("Invalid account type.");
         }
 
         return (AbstractAccount) account;
     }
 
-    private int parsePin(String pin) throws InvalidPinException {
+    private int parsePin(String pin) throws Exception {
         try {
             return Integer.parseInt(pin);
         } catch (NumberFormatException exception) {
-            throw new InvalidPinException("Invalid PIN");
+            throw new Exception("Invalid PIN.");
         }
     }
 }

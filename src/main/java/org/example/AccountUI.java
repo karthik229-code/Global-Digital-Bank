@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Scanner;
 
 public class AccountUI {
+
     private final AccountService service;
     private final Scanner scanner;
 
@@ -50,7 +51,9 @@ public class AccountUI {
                         System.out.println("Thank you! Goodbye.");
                         break;
                     default:
-                        System.out.println("Invalid choice. Enter a number from 1 to 8.");
+                        System.out.println(
+                                "Invalid choice. Enter a number from 1 to 8."
+                        );
                 }
             } catch (Exception exception) {
                 System.out.println("ERROR: " + exception.getMessage());
@@ -84,8 +87,9 @@ public class AccountUI {
                 "Account Type (Savings/Current/FixedDeposit/Salary): "
         ).trim().toUpperCase();
 
-        if (type.equals("FIXEDDEPOSIT") || type.equals("FIXED DEPOSIT")) {
-            type = "FIXED_DEPOSIT";
+        if (type.equals("FIXED DEPOSIT")
+                || type.equals("FIXED_DEPOSIT")) {
+            type = "FIXEDDEPOSIT";
         }
 
         String name = readString("Name: ");
@@ -93,22 +97,30 @@ public class AccountUI {
         double balance = readDouble("Initial Balance: ");
 
         int tenure = 0;
-        if (type.equals("FIXED_DEPOSIT")) {
+
+        if (type.equals("FIXEDDEPOSIT")) {
             tenure = readInt("Tenure in years: ");
         }
 
         IAccount account = service.openAccount(
-                type, name, age, balance, tenure
+                type,
+                name,
+                age,
+                balance,
+                tenure
         );
-
-        System.out.println("SUCCESS: Account opened.");
-        account.displayAccountInfo();
 
         if (account instanceof AbstractAccount) {
             int pin = readInt("Set 4-digit PIN: ");
+
             ((AbstractAccount) account).setPin(pin);
+            service.updateAccount(account);
+
             System.out.println("PIN set successfully.");
         }
+
+        System.out.println("SUCCESS: Account opened.");
+        account.displayAccountInfo();
     }
 
     private void handleDeposit() throws Exception {
@@ -117,7 +129,8 @@ public class AccountUI {
         int accountNumber = readInt("Account Number: ");
         double amount = readDouble("Amount to deposit: ");
 
-        Transaction transaction = service.deposit(accountNumber, amount);
+        Transaction transaction =
+                service.deposit(accountNumber, amount);
 
         System.out.println("SUCCESS: Deposit completed.");
         System.out.println(transaction);
@@ -130,9 +143,8 @@ public class AccountUI {
         double amount = readDouble("Amount to withdraw: ");
         String pin = readString("PIN: ");
 
-        Transaction transaction = service.withdraw(
-                accountNumber, amount, pin
-        );
+        Transaction transaction =
+                service.withdraw(accountNumber, amount, pin);
 
         System.out.println("SUCCESS: Withdrawal completed.");
         System.out.println(transaction);
@@ -147,7 +159,10 @@ public class AccountUI {
         String pin = readString("PIN: ");
 
         Transaction transaction = service.transfer(
-                source, destination, amount, pin
+                source,
+                destination,
+                amount,
+                pin
         );
 
         System.out.println("SUCCESS: Transfer completed.");
@@ -171,13 +186,19 @@ public class AccountUI {
         int accountNumber = readInt("Account Number: ");
         IAccount account = service.getAccount(accountNumber);
 
+        if (account == null) {
+            System.out.println("Account not found.");
+            return;
+        }
+
         account.displayAccountInfo();
     }
 
     private void handleViewTransactions() throws Exception {
         System.out.println("--- Transaction History ---");
 
-        List<Transaction> transactions = service.getTransactionHistory();
+        List<Transaction> transactions =
+                service.getTransactionHistory();
 
         if (transactions.isEmpty()) {
             System.out.println("No transactions found.");
@@ -185,7 +206,9 @@ public class AccountUI {
         }
 
         for (int i = 0; i < transactions.size(); i++) {
-            System.out.println((i + 1) + ". " + transactions.get(i));
+            System.out.println(
+                    (i + 1) + ". " + transactions.get(i)
+            );
         }
     }
 
