@@ -5,24 +5,31 @@ import org.example.command.DepositCommand;
 import org.example.command.TransactionCommand;
 import org.example.command.TransferCommand;
 import org.example.command.WithdrawCommand;
+import org.example.repository.AccountRepository;
+import org.example.repository.TransactionRepository;
+import org.example.repository.RepositoryFactory;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 public class AccountService {
 
-    private final Map<Integer, IAccount> accounts;
+    private final AccountRepository accountRepository;
+    private final TransactionRepository transactionRepository;
     private final TransactionLogger logger;
     private final TransferService transferService;
+
     private int nextAccountNumber = 1001;
 
     public AccountService(
             TransactionLogger logger,
             TransferService transferService) {
 
-        this.accounts = new LinkedHashMap<>();
+        this.accountRepository =
+                RepositoryFactory.createAccountRepository();
+
+        this.transactionRepository =
+                RepositoryFactory.createTransactionRepository();
+
         this.logger = logger;
         this.transferService = transferService;
     }
@@ -34,7 +41,7 @@ public class AccountService {
             double initialBalance,
             int tenureYears) throws AccountException {
 
-        int accountNumber = nextAccountNumber;
+        int accountNumber = accountRepository.nextAccountNumber();
 
         IAccount account = AccountFactory.createAccount(
                 type,
@@ -45,8 +52,8 @@ public class AccountService {
                 tenureYears
         );
 
-        accounts.put(accountNumber, account);
-        nextAccountNumber++;
+        accountRepository.save(account);
+        nextAccountNumber = accountNumber + 1;
 
         return account;
     }
@@ -59,6 +66,8 @@ public class AccountService {
 
         account.validatePin(parsePin(pin));
         account.closeAccount();
+
+        accountRepository.update(account);
     }
 
     public Transaction deposit(int accountNumber, double amount)
@@ -71,9 +80,13 @@ public class AccountService {
                 new DepositCommand(account, amount);
 
         command.execute();
+
+        Transaction transaction = command.getTransaction();
+        transactionRepository.save(transaction);
+
         logger.log(command);
 
-        return command.getTransaction();
+        return transaction;
     }
 
     public Transaction withdraw(
@@ -88,9 +101,13 @@ public class AccountService {
                 new WithdrawCommand(account, amount, parsePin(pin));
 
         command.execute();
+
+        Transaction transaction = command.getTransaction();
+        transactionRepository.save(transaction);
+
         logger.log(command);
 
-        return command.getTransaction();
+        return transaction;
     }
 
     public Transaction transfer(
@@ -113,15 +130,19 @@ public class AccountService {
         );
 
         command.execute();
+
+        Transaction transaction = command.getTransaction();
+        transactionRepository.save(transaction);
+
         logger.log(command);
 
-        return command.getTransaction();
+        return transaction;
     }
 
     public IAccount getAccount(int accountNumber)
             throws AccountException {
 
-        IAccount account = accounts.get(accountNumber);
+        IAccount account = accountRepository.findById(accountNumber);
 
         if (account == null) {
             throw new AccountException(
@@ -132,19 +153,11 @@ public class AccountService {
     }
 
     public List<IAccount> getAllAccounts() {
-        return new ArrayList<>(accounts.values());
+        return accountRepository.findAll();
     }
 
-    public List<Transaction> getTransactionHistory() throws Exception {
-        List<Transaction> transactions = new ArrayList<>();
-
-        for (TransactionCommand command : logger.readAll()) {
-            if (command.getTransaction() != null) {
-                transactions.add(command.getTransaction());
-            }
-        }
-
-        return transactions;
+    public List<Transaction> getTransactionHistory() {
+        return transactionRepository.findAll();
     }
 
     public int getNextAccountNumber() {
