@@ -10,7 +10,6 @@ import java.util.Map;
 public class InMemoryAccountRepository implements AccountRepository {
 
     private final Map<Integer, IAccount> accounts = new HashMap<>();
-
     private int nextId = 1001;
 
     @Override
@@ -50,5 +49,25 @@ public class InMemoryAccountRepository implements AccountRepository {
     @Override
     public int nextAccountNumber() {
         return nextId++;
+    }
+
+    @Override
+    public void transfer(IAccount sourceAccount, IAccount destinationAccount) {
+
+        if (sourceAccount == null || destinationAccount == null) {
+            throw new IllegalArgumentException(
+                    "Source and destination accounts cannot be null"
+            );
+        }
+
+        if (!exists(sourceAccount.getAccountNumber())
+                || !exists(destinationAccount.getAccountNumber())) {
+            throw new IllegalArgumentException(
+                    "Both accounts must exist"
+            );
+        }
+
+        accounts.put(sourceAccount.getAccountNumber(), sourceAccount);
+        accounts.put(destinationAccount.getAccountNumber(), destinationAccount);
     }
 }

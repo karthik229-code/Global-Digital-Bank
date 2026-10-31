@@ -1,4 +1,3 @@
-
 package org.example;
 
 import org.example.command.DepositCommand;
@@ -138,14 +137,17 @@ public class AccountService {
                 numericPin
         );
 
+        // Validate and perform the transfer in the account objects.
         command.execute();
 
         Transaction transaction = command.getTransaction();
 
-        accountRepository.update(sourceAccount);
-        accountRepository.update(destinationAccount);
+        // Persist both account balances atomically.
+        accountRepository.transfer(sourceAccount, destinationAccount);
 
+        // Save transaction history after the balance transfer succeeds.
         transactionRepository.save(transaction);
+
         logger.log(command);
 
         return transaction;

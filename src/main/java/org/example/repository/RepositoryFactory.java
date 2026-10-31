@@ -1,5 +1,6 @@
 package org.example.repository;
 
+import org.example.DataAccessException;
 import org.example.db.ConnectionProvider;
 import org.example.db.DatabaseConfig;
 import org.example.db.JdbcConnectionProvider;
@@ -13,6 +14,8 @@ public class RepositoryFactory {
             DatabaseConfig.getPersistenceMode();
 
     private static ConnectionProvider connectionProvider;
+
+    private static boolean schemaInitialized = false;
 
     public static AccountRepository createAccountRepository() {
 
@@ -41,7 +44,7 @@ public class RepositoryFactory {
         return connectionProvider;
     }
 
-    private static void initializeJdbc() {
+    private static synchronized void initializeJdbc() {
 
         if (!"jdbc".equalsIgnoreCase(MODE)) {
             throw new IllegalArgumentException(
@@ -54,12 +57,16 @@ public class RepositoryFactory {
                 connectionProvider = new JdbcConnectionProvider();
             }
 
-            Connection connection = connectionProvider.getConnection();
+            if (!schemaInitialized) {
+                Connection connection = connectionProvider.getConnection();
 
-            SchemaInitializer.initialize(connection);
+                SchemaInitializer.initialize(connection);
+
+                schemaInitialized = true;
+            }
 
         } catch (Exception e) {
-            throw new RuntimeException(
+            throw new DataAccessException(
                     "Failed to initialize JDBC persistence", e
             );
         }
