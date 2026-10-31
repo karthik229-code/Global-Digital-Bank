@@ -1,29 +1,17 @@
-
 package org.example;
 
 public class Main {
 
     public static void main(String[] args) {
-        System.out.println("Starting Global Digital Bank...");
 
-        try {
-            FileLogDestination destination = new FileLogDestination();
-            TransactionLogger logger = new TransactionLogger(destination);
-            TransferService transferService = new TransferService();
+        TransactionLogger logger =
+                new TransactionLogger(new FileLogDestination());
 
-            AccountService accountService = new AccountService(
-                    logger,
-                    transferService
-            );
+        AccountService accountService =
+                new AccountService(logger, null);
 
-            AccountUI accountUI = new AccountUI(accountService);
-            accountUI.start();
+        AccountUI accountUI = new AccountUI(accountService);
 
-        } catch (Exception exception) {
-            System.out.println(
-                    "Unable to start the application: "
-                            + exception.getMessage()
-            );
-        }
+        accountUI.start();
     }
 }
